@@ -18,8 +18,11 @@ pub mod duplicate_mutable_accounts {
         player_one_choice: RockPaperScissors,
         player_two_choice: RockPaperScissors,
     ) -> Result<()> {
-        ctx.accounts.player_one.choice = Some(player_one_choice);
+        if ctx.accounts.player_one.choice.is_some() || ctx.accounts.player_two.choice.is_some() {
+            return Err(ErrorCode::ChoiceAlreadyMade.into());
+        }
 
+        ctx.accounts.player_one.choice = Some(player_one_choice);
         ctx.accounts.player_two.choice = Some(player_two_choice);
         Ok(())
     }
@@ -29,8 +32,13 @@ pub mod duplicate_mutable_accounts {
         player_one_choice: RockPaperScissors,
         player_two_choice: RockPaperScissors,
     ) -> Result<()> {
-        ctx.accounts.player_one.choice = Some(player_one_choice);
+        if ctx.accounts.player_one.choice.is_some() || ctx.accounts.player_two.choice.is_some() {
+            return Err(ErrorCode::ChoiceAlreadyMade.into());
+        }
 
+        require!(ctx.accounts.player_one.key() != ctx.accounts.player_two.key(), ErrorCode::PlayersCannotBeSame);
+
+        ctx.accounts.player_one.choice = Some(player_one_choice);
         ctx.accounts.player_two.choice = Some(player_two_choice);
         Ok(())
     }
@@ -79,4 +87,13 @@ pub enum RockPaperScissors {
     Rock,
     Paper,
     Scissors,
+}
+
+#[error_code]
+pub enum ErrorCode {
+    #[msg("Both players cannot have made a choice already.")]
+    ChoiceAlreadyMade,
+
+    #[msg("Players cannot be the same.")]
+    PlayersCannotBeSame,
 }
